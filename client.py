@@ -12,18 +12,24 @@ CLIENT_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/client.py
 try:
     latest = requests.get(UPDATE_URL).text.strip()
     if latest != LOCAL_VERSION:
-        if messagebox.askyesno("Update Available", f"Version {latest} is available. Update now?"):
+        if messagebox.askyesno(
+            "Update Available",
+            f"Version {latest} is available. Do you want to update now?"
+        ):
             r = requests.get(CLIENT_URL)
             with open(sys.argv[0], "wb") as f:
                 f.write(r.content)
-            messagebox.showinfo("Update Complete", "Update downloaded! Please restart the app.")
+            messagebox.showinfo(
+                "Update Complete",
+                "Update downloaded! The update changes would not apply until the app is restarted."
+            )
             sys.exit()
-except:
-    pass
+except Exception as e:
+    print("Auto-update check failed:", e)
 # ----------------------------------------------
 
 # ------------------ CONNECT TO SERVER ------------------
-SERVER_IP = "127.0.0.1"  # Localhost for same PC testing
+SERVER_IP = "127.0.0.1"  # Automatically connects to local server
 SERVER_PORT = 5555
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
