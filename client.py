@@ -1,16 +1,35 @@
 import socket
 import threading
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
+import requests, sys
 
-# ------------------ Connect to server ------------------
+# ------------------ AUTO-UPDATE ------------------
+LOCAL_VERSION = "1.0"
+UPDATE_URL = "https://raw.githubusercontent.com/YourUsername/ChatApp/main/version.txt"
+CLIENT_URL = "https://raw.githubusercontent.com/YourUsername/ChatApp/main/client.py"
+
+try:
+    latest = requests.get(UPDATE_URL).text.strip()
+    if latest != LOCAL_VERSION:
+        if messagebox.askyesno("Update Available", f"Version {latest} is available. Update now?"):
+            r = requests.get(CLIENT_URL)
+            with open(sys.argv[0], "wb") as f:
+                f.write(r.content)
+            messagebox.showinfo("Update Complete", "Please restart the app!")
+            sys.exit()
+except:
+    pass
+# ----------------------------------------------
+
+# ------------------ CONNECT TO SERVER ------------------
 SERVER_IP = simpledialog.askstring("Server IP", "Enter server IP:")
 SERVER_PORT = 5555
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER_IP, SERVER_PORT))
 
-# ------------------ GUI Setup ------------------
+# ------------------ GUI SETUP ------------------
 root = tk.Tk()
 root.title("Public Chat")
 
@@ -42,7 +61,7 @@ msg_entry.bind('<Return>', send)
 send_button = tk.Button(root, text="Send", command=send)
 send_button.pack(pady=5)
 
-# ------------------ Username ------------------
+# ------------------ USERNAME ------------------
 username = simpledialog.askstring("Username", "Enter your username:")
 client.send(username.encode())
 
