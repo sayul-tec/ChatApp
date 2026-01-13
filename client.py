@@ -5,9 +5,9 @@ from tkinter import simpledialog, messagebox
 import requests, sys
 
 # ------------------ AUTO-UPDATE ------------------
-LOCAL_VERSION = "1.0"
-UPDATE_URL = "https://raw.githubusercontent.com/YourUsername/ChatApp/main/version.txt"
-CLIENT_URL = "https://raw.githubusercontent.com/YourUsername/ChatApp/main/client.py"
+LOCAL_VERSION = "1.1"
+UPDATE_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/version.txt"
+CLIENT_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/client.py"
 
 try:
     latest = requests.get(UPDATE_URL).text.strip()
@@ -16,22 +16,26 @@ try:
             r = requests.get(CLIENT_URL)
             with open(sys.argv[0], "wb") as f:
                 f.write(r.content)
-            messagebox.showinfo("Update Complete", "Please restart the app!")
+            messagebox.showinfo("Update Complete", "Update downloaded! Please restart the app.")
             sys.exit()
 except:
     pass
 # ----------------------------------------------
 
 # ------------------ CONNECT TO SERVER ------------------
-SERVER_IP = simpledialog.askstring("Server IP", "Enter server IP:")
+SERVER_IP = "127.0.0.1"  # Automatically connects to local server
 SERVER_PORT = 5555
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((SERVER_IP, SERVER_PORT))
+try:
+    client.connect((SERVER_IP, SERVER_PORT))
+except Exception as e:
+    messagebox.showerror("Connection Error", f"Could not connect to server:\n{e}")
+    sys.exit()
 
 # ------------------ GUI SETUP ------------------
 root = tk.Tk()
-root.title("Public Chat")
+root.title("Public Chat App")
 
 chat_area = tk.Text(root)
 chat_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
@@ -41,29 +45,38 @@ msg_entry = tk.Entry(root)
 msg_entry.pack(fill=tk.X, padx=10, pady=5)
 
 def receive():
+    """Receive messages from the server"""
     while True:
         try:
-            message = client.recv(1024).decode()
+            msg = client.recv(1024).decode()
             chat_area.config(state='normal')
-            chat_area.insert(tk.END, message + "\n")
+            chat_area.insert(tk.END, msg + "\n")
             chat_area.config(state='disabled')
             chat_area.see(tk.END)
         except:
             break
 
 def send(event=None):
-    message = msg_entry.get()
+    """Send message to the server"""
+    msg = msg_entry.get()
     msg_entry.delete(0, tk.END)
-    if message:
-        client.send(f"{username}: {message}".encode())
+    if msg:
+        client.send(f"{username}: {msg}".encode())
 
 msg_entry.bind('<Return>', send)
 send_button = tk.Button(root, text="Send", command=send)
 send_button.pack(pady=5)
 
 # ------------------ USERNAME ------------------
-username = simpledialog.askstring("Username", "Enter your username:")
-client.send(username.encode())
+root.withdraw()  # Hide window until username entered
+username = simpledialog.askstring("Username", "Enter your username:", parent=root)
+if not username:
+    messagebox.showerror("Error", "Username cannot be empty!")
+    sys.exit()
 
+client.send(username.encode())
+root.deiconify()  # Show main chat window
+
+# ------------------ START RECEIVE THREAD ------------------
 threading.Thread(target=receive, daemon=True).start()
 root.mainloop()
