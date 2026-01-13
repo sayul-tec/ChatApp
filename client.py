@@ -5,7 +5,7 @@ from tkinter import simpledialog, messagebox
 import requests, sys
 
 # ------------------ AUTO-UPDATE ------------------
-LOCAL_VERSION = "1.1"
+LOCAL_VERSION = "1.2"
 UPDATE_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/version.txt"
 CLIENT_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/client.py"
 
@@ -23,7 +23,7 @@ except:
 # ----------------------------------------------
 
 # ------------------ CONNECT TO SERVER ------------------
-SERVER_IP = "127.0.0.1"  # Automatically connects to local server
+SERVER_IP = "127.0.0.1"  # Localhost for same PC testing
 SERVER_PORT = 5555
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,14 +68,13 @@ send_button = tk.Button(root, text="Send", command=send)
 send_button.pack(pady=5)
 
 # ------------------ USERNAME ------------------
-root.withdraw()  # Hide window until username entered
+root.withdraw()
 username = simpledialog.askstring("Username", "Enter your username:", parent=root)
 if not username:
     messagebox.showerror("Error", "Username cannot be empty!")
     sys.exit()
-
 client.send(username.encode())
-root.deiconify()  # Show main chat window
+root.deiconify()
 
 # ------------------ START RECEIVE THREAD ------------------
 threading.Thread(target=receive, daemon=True).start()
