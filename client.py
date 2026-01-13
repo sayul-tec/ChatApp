@@ -5,7 +5,7 @@ from tkinter import simpledialog, messagebox
 import requests, sys
 
 # ------------------ AUTO-UPDATE ------------------
-LOCAL_VERSION = "1.2"
+LOCAL_VERSION = "1.3"
 UPDATE_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/version.txt"
 CLIENT_URL = "https://raw.githubusercontent.com/sayul-tec/ChatApp/main/client.py"
 
@@ -29,7 +29,7 @@ except Exception as e:
 # ----------------------------------------------
 
 # ------------------ CONNECT TO SERVER ------------------
-SERVER_IP = "127.0.0.1"  # Automatically connects to local server
+SERVER_IP = "127.0.0.1"  # Localhost for same PC
 SERVER_PORT = 5555
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,27 +47,44 @@ chat_area = tk.Text(root)
 chat_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 chat_area.config(state='disabled')
 
+# Configure tag for system messages
+chat_area.tag_config("system", foreground="blue")
+
 msg_entry = tk.Entry(root)
 msg_entry.pack(fill=tk.X, padx=10, pady=5)
 
+# ------------------ FUNCTIONS ------------------
 def receive():
     """Receive messages from the server"""
     while True:
         try:
             msg = client.recv(1024).decode()
-            chat_area.config(state='normal')
-            chat_area.insert(tk.END, msg + "\n")
-            chat_area.config(state='disabled')
-            chat_area.see(tk.END)
+            if msg.startswith("***"):  # System message
+                chat_area.config(state='normal')
+                chat_area.insert(tk.END, msg + "\n", "system")
+                chat_area.config(state='disabled')
+                chat_area.see(tk.END)
+            else:
+                chat_area.config(state='normal')
+                chat_area.insert(tk.END, msg + "\n")
+                chat_area.config(state='disabled')
+                chat_area.see(tk.END)
         except:
             break
 
 def send(event=None):
-    """Send message to the server"""
+    """Send message to the server and display it locally"""
     msg = msg_entry.get()
     msg_entry.delete(0, tk.END)
     if msg:
-        client.send(f"{username}: {msg}".encode())
+        full_msg = f"{username}: {msg}"
+        # Display locally immediately
+        chat_area.config(state='normal')
+        chat_area.insert(tk.END, full_msg + "\n")
+        chat_area.config(state='disabled')
+        chat_area.see(tk.END)
+        # Send to server
+        client.send(full_msg.encode())
 
 msg_entry.bind('<Return>', send)
 send_button = tk.Button(root, text="Send", command=send)
