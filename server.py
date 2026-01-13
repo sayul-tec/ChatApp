@@ -5,7 +5,6 @@ clients = []
 usernames = []
 
 def broadcast(message, sender=None):
-    """Send a message to all clients except sender"""
     for client in clients:
         if client != sender:
             try:
@@ -14,25 +13,24 @@ def broadcast(message, sender=None):
                 clients.remove(client)
 
 def handle(client):
-    """Handle messages from a single client"""
     while True:
         try:
             message = client.recv(1024)
             if message:
                 broadcast(message, sender=client)
         except:
-            index = clients.index(client)
-            username = usernames[index]
-            clients.remove(client)
-            usernames.remove(username)
-            broadcast(f"*** {username} left the chat ***".encode())
+            if client in clients:
+                index = clients.index(client)
+                username = usernames[index]
+                clients.remove(client)
+                usernames.remove(username)
+                broadcast(f"*** {username} left the chat ***".encode())
             client.close()
             break
 
 def receive():
-    """Accept new connections"""
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('0.0.0.0', 5555))  # Listen on all IPs
+    server.bind(('0.0.0.0', 5555))  # listen on all IPs
     server.listen()
     print("Server running on port 5555...")
 
